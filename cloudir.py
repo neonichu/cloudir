@@ -1,20 +1,30 @@
 #!/usr/bin/env python
 
+##
+## Upload all text files from a directory to CloudApp
+## Copyright 2013 Boris Buegling <boris@buegling.com>
+##
+## Requires https://github.com/originell/pycloudapp to work
+##
+
 from cloudapp.cloud import Cloud
 
 import os
+import sys
 import tempfile
 
+# TODO: put credentials in a configuration file
 CLOUD_USER = 'user@gmail.com'
 CLOUD_PASS = 'password123'
 
-DIR = 'test-files'
-EXTS = ['markdown', 'md', 'txt']
-TITLE = 'cloudir test'
+DIR 	= '.'
+EXTS 	= ['markdown', 'md', 'txt']
+TITLE 	= sys.argv[1] if len(sys.argv) > 1 else 'Index of %s' % os.getcwd()
 
 
 def fill_template(title, file_index):
-	template = ''.join(file('template.html').readlines())
+	path = os.path.join(os.path.dirname(sys.argv[0]), 'template.html')
+	template = ''.join(file(path).readlines())
 	template = template.replace('$$$title$$$', title)
 	template = template.replace('<!--', file_index + '\n\n<!--')	
 	return template
@@ -48,5 +58,9 @@ if __name__ == '__main__':
 	mycloud.auth(CLOUD_USER, CLOUD_PASS)
 
 	file_index = upload_files_from_directory(mycloud, DIR)
+	if file_index == '':
+		print 'Nothing to upload.'
+		sys.exit(1)
+
 	template = fill_template(TITLE, file_index)
 	print upload_string_as_file(mycloud, template, '.html')
